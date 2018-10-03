@@ -1,0 +1,86 @@
+ ---
+title: "Problem Set 2"
+author: "Sofia Marie Mascia"
+date: "October 1, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(knitr)
+library(gov.1005.data)
+
+```
+
+
+### Question 1
+*Seven states with the highest percentage of Democratic Votes in the 2008 election*
+```{r Question 1}
+
+x_2008 <- elections %>% 
+  filter(year == 2008) %>% 
+  mutate(state=str_to_title(state))%>% 
+  group_by(state) %>% 
+  summarise(totalvote = sum(rep + dem + other), totaldem = sum(dem), totalrep = sum(rep))%>%  mutate(dem_per=totaldem/totalvote, rep_per=totalrep/totalvote) %>% 
+ arrange(desc(dem_per)) %>% 
+  select(state, dem_per) %>% 
+  slice(1:7)
+  
+```
+
+```{r Table 1}
+x_2008 %>%  kable(align = "c", digits= 3, format="markdown", header=TRUE, caption="Table 1. Seven states with the highest percentage of Democratic Votes in the 2008 election", col.names =c("State","Democratic Votes"))
+
+```
+
+### Question 2
+```{r Question 2 Choosing State, include=FALSE}
+
+elections %>% 
+group_by(state) %>% 
+  summarize(n_county=n_distinct(county)) %>% 
+  filter(n_county>=8) 
+
+```
+
+*Based on results generated from code, state chosen = Massachusetts (14 counties)*
+```{r Question 2, echo = FALSE}
+x_Mass <- elections %>% 
+  filter(state == "massachusetts") %>% 
+  mutate(totalvote = rep + dem + other,
+         dem_per = dem/totalvote) %>% 
+  mutate(county=str_to_title(county))%>% 
+  group_by(county) %>% 
+  summarise(stdev_county=sd(dem_per)) %>% 
+  arrange(desc(stdev_county)) %>% 
+  slice(1:8)
+
+```
+
+```{r Question 2 Table 2}
+
+x_Mass %>% kable(align = "c", digits= 4, format="markdown", header=TRUE, caption="Table 2. Eight counties in Massachusetts with the highest standard deviation between elections", col.names = c("County", "Standard Deviation"))
+
+```
+  
+### Question 3
+*The percentage of the Democratic vote over time in Massachusetts*
+
+```{r Question 3 4x2 graphic}
+x_county <- elections %>% 
+  filter(state == "massachusetts" & county %in% c("dukes", "nantucket", "franklin","berkshire","worcester","suffolk","bristol","essex")) %>% 
+  mutate(totalvote = rep + dem + other,
+         dem_per = dem/totalvote)
+  
+ggplot(x_county,aes(x=year,y=dem_per))+geom_line()+facet_wrap(~county, nrow=2, ncol=4,labeller = "label_both") +
+  theme(strip.background = element_blank(), strip.placement = "outside") +  labs(title="Graph. 1. Percentage of Democratic votes per county in MA over time", subtitle= "Elections from 1960 to 2012", x="Year", y="Percentage of Democratic Votes") + theme_classic()
+
+  
+```
+
+
+
+
+### Collaborators
+Ghada Amer ('20) and Cayanne Chachati ('20)
